@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pick sheets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+  :root {
+    --page: #e8ebef;
+    --panel: #ffffff;
+    --ink: #10151c;
+    --steel: #4b5563;
+    --line: #d3d8df;
+    --tape: #ff6a00;
+    --tape-ink: #1a0a00;
+    --check: #1f8a4c;
+    --card: 320px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--page); color: var(--ink);
+    font-family: Barlow, "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.4; }
+
+  .top { background: var(--ink); color: #fff; padding: 22px 24px 18px; }
+  .top-inner { max-width: 1240px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: flex-end; justify-content: space-between; }
+  .title { font-family: "Barlow Condensed", Barlow, sans-serif; font-weight: 700; font-size: 40px; line-height: 1; letter-spacing: 0.01em; margin: 0; text-transform: uppercase; }
+  .title .sub { display: block; font-family: Barlow, sans-serif; font-weight: 400; font-size: 14px; letter-spacing: 0; text-transform: none; color: #b7c0cc; margin-top: 8px; }
+  .stats { display: flex; gap: 28px; }
+  .stat { font-family: "Barlow Condensed", sans-serif; font-size: 30px; font-weight: 700; line-height: 1; }
+  .stat small { display: block; font-family: Barlow, sans-serif; font-weight: 400; font-size: 12px; color: #b7c0cc; margin-top: 4px; }
+
+  .bar { background: var(--panel); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+  .bar-inner { max-width: 1240px; margin: 0 auto; padding: 12px 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .search { flex: 1 1 220px; display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); border-radius: 6px; padding: 8px 12px; background: #fff; }
+  .search input { border: 0; outline: 0; font: inherit; width: 100%; background: transparent; }
+  .search svg { width: 16px; height: 16px; stroke: var(--steel); fill: none; stroke-width: 2; }
+  .seg { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--steel); }
+  input[type=range] { accent-color: var(--tape); width: 120px; }
+  select { font: inherit; font-weight: 600; font-size: 14px; border: 1.5px solid var(--ink); background: #fff; color: var(--ink); padding: 8px 12px; border-radius: 6px; }
+  button { font: inherit; font-weight: 600; font-size: 14px; border: 1.5px solid var(--ink); background: #fff; color: var(--ink); padding: 8px 14px; border-radius: 6px; cursor: pointer; }
+  button.primary { background: var(--tape); border-color: var(--tape); color: var(--tape-ink); }
+  button:hover { filter: brightness(0.96); }
+  button:focus-visible, .search:focus-within, textarea:focus-visible { outline: 3px solid rgba(255,106,0,.45); outline-offset: 2px; }
+
+  main { max-width: 1240px; margin: 0 auto; padding: 22px 24px 60px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(var(--card), 1fr)); }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; break-inside: avoid; display: flex; flex-direction: column; }
+  .card.done { opacity: .45; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--line); background: #f6f7f9; }
+  .card-head .item { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 26px; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+  .card-head label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--steel); cursor: pointer; user-select: none; }
+  .card-head input { accent-color: var(--check); width: 16px; height: 16px; }
+  .pair { display: flex; gap: 12px; padding: 14px; }
+  .half { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .half svg { width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 6px; padding: 4px; background: #fff; }
+  .lbl { font-size: 11px; color: var(--steel); }
+  .half.nobin { justify-content: center; border: 1.5px dashed var(--line); border-radius: 6px; }
+  .half.nobin .val.bin { background: #fde8d8; color: #9a3d00; }
+  .val { font-weight: 600; font-size: 15px; font-variant-numeric: tabular-nums; text-align: center; }
+  .val.bin { background: var(--tape); color: var(--tape-ink); padding: 3px 10px; border-radius: 4px; font-family: "Barlow Condensed", sans-serif; font-size: 18px; font-weight: 700; letter-spacing: 0.03em; }
+  .card-foot { margin-top: auto; padding: 10px 14px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--steel); }
+  .card-foot b { font-family: "Barlow Condensed", sans-serif; font-size: 24px; color: var(--ink); }
+  .group { grid-column: 1 / -1; font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink); border-bottom: 2px solid var(--tape); padding: 14px 0 6px; margin-top: 6px; }
+  .binsel { font: inherit; font-weight: 700; font-family: "Barlow Condensed", sans-serif; font-size: 17px; width: 100%; background: var(--tape); color: var(--tape-ink); border: 0; border-radius: 4px; padding: 5px 8px; }
+  .empty { color: var(--steel); text-align: center; padding: 60px 0; }
+
+  details.editor { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; }
+  details.editor summary { font-weight: 600; cursor: pointer; }
+  details.editor p { color: var(--steel); font-size: 13px; margin: 8px 0 10px; }
+  textarea { width: 100%; min-height: 220px; font: 14px/1.6 ui-monospace, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; border: 1.5px solid var(--line); border-radius: 6px; padding: 10px; }
+  .editor-actions { margin-top: 10px; }
+
+  @media (max-width: 600px) { .title { font-size: 32px; } .top, .bar-inner, main { padding-left: 14px; padding-right: 14px; } }
+  @media (prefers-reduced-motion: no-preference) { .card { transition: opacity .2s; } }
+  @media print {
+    body { background: #fff; }
+    .top { background: #fff; color: #000; padding: 0 0 12px; border-bottom: 2px solid #000; }
+    .title span, .stat small { color: #444; }
+    .bar, details.editor, .card-head label { display: none; }
+    main { padding: 12px 0; }
+    .grid { gap: 10px; }
+    .card { border-color: #000; border-radius: 6px; opacity: 1 !important; }
+    .card-head { background: #fff; }
+    .val.bin { border: 1.5px solid #000; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <h1 class="title"><span id="sheet-name">Hood assembly</span><span class="sub">Pick sheet · scan bin first, then item</span></h1>
+    <div class="stats">
+      <div class="stat"><span id="stat-items">0</span><small>items</small></div>
+      <div class="stat"><span id="stat-pieces">0</span><small>pieces</small></div>
+      <div class="stat"><span id="stat-done">0</span><small>picked</small></div>
+    </div>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="bar-inner">
+    <label class="search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Filter by item or bin" aria-label="Filter">
+    </label>
+    <select id="sheet" aria-label="Pick sheet"><option value="hood">Hood assembly</option><option value="door4">Door 4</option><option value="door3">Door 3</option></select>
+    <label class="seg">Size <input id="size" type="range" min="240" max="520" value="320" aria-label="Card size"></label>
+    <button id="reset">Clear picked</button>
+    <button id="unlock" title="Owner only">Unlock editing</button>
+  </div>
+</div>
+
+<main>
+  <details class="editor" id="editor" hidden>
+    <summary>Edit item list</summary>
+    <p>One item per line: item number, expected quantity, then bin. Several bins: separate with | and put stock in parentheses, e.g. 045-02-01-A(120)|044-03-03-B(50). A line starting with # is a section header. QR codes are plain text.</p>
+    <textarea id="items" spellcheck="false"></textarea>
+    <div class="editor-actions"><button id="regen">Update sheet</button> <button id="lock">Lock editing</button></div>
+  </details>
+
+  <div id="grid" class="grid" aria-live="polite"></div>
+</main>
+
+<script>
+  const grid = document.getElementById('grid');
+  const ta = document.getElementById('items');
+  const q = document.getElementById('q');
+  const SHEETS = {
+    hood: { name: 'Hood assembly', data: `12000021 1 OUTSIDE LOT
+12000036 1 OUTSIDE LOT
+12000038 1 OUTSIDE LOT
+12000039 1 OUTSIDE LOT
+12000097 1 053-07-01-A
+12000236 4 053-09-01-A
+12000287 1 056-01-02-A
+14500096 1 039-04-01-A
+14500098 1 044-01-01-A
+14500099 2 046-07-01-A
+12000235 1 OUTSIDE LOT
+18200068 4 100-01-05-A
+18200086 2 102-01-01-B
+15000185 4 048-07-01-C`, done: new Set() },
+    door3: { name: 'Door 3', data: `12000009 8 097-01-01-B
+12000011 8 RECEIVING
+12000012 8 OUTSIDE LOT
+12000013 8 RECEIVING
+15000498 8 099-02-01-C
+11000006 16 091-01-01-B
+15000519 8 098-01-01-C
+15000521 8
+15000523 8 098-01-01-A
+# Insulation
+18600021 8 047-09-04-C(35)|047-09-04-B(35)|047-08-05-B(35)|046-13-01-A(39)|046-11-05-B(64)|046-11-04-B(38)|039-07-01-A(1)
+18600025 8 OUTSIDE LOT(23)|047-07-05-C(30)|047-07-05-B(60)|047-07-05-A(43)|046-11-01-A(54)|039-09-01-B(31)
+14500046 8 OUTSIDE LOT(34)|045-03-04-B(25)|045-02-03-B(28)|045-02-02-A(70)|045-02-01-A(120)|044-03-03-B(50)|044-02-03-B(50)|044-01-03-B(50)
+14500045 8 045-07-03-A(50)|045-06-04-A(25)|045-06-03-B(50)|045-05-05-A(42)|045-05-04-B(25)|045-05-03-B(25)|045-05-03-A(50)|045-05-02-A(79)
+14500047 8 RECEIVING(8)|OUTSIDE LOT(26)|045-09-01-A(64)|045-08-05-A(66)|045-08-04-A(20)|045-08-03-B(28)|045-08-03-A(40)|045-08-02-A(110)
+18600017 8 045-12-05-A(36)|045-09-05-B(120)|044-07-01-A(55)|041-11-01-A(41)
+14500049 8 RECEIVING(3)|QC INSPECT(1)|OUTSIDE LOT(8)|047-07-04-A(60)|046-11-03-A(116)|046-11-02-A(120)|044-10-01-A(112)|043-08-02-A(120)
+18600019 8 043-07-04-B(32)|043-07-02-A(112)|043-07-01-A(128)|039-11-01-B(21)
+18600023 8 RECEIVING(43)|QC INSPECT(18)|042-05-05-B(40)|042-05-04-B(40)|042-05-04-A(20)|042-05-03-B(40)|042-05-03-A(40)|042-05-02-A(80)|042-05-01-A(83)`, done: new Set() },
+    door4: { name: 'Door 4', data: `12000007 8 OUTSIDE LOT
+12000009 8 097-01-01-B
+12000011 8 RECEIVING
+12000012 8 OUTSIDE LOT
+12000013 8 RECEIVING
+15000498 8 099-02-01-C
+11000006 16 091-01-01-B
+15000519 8 098-01-01-C
+15000521 8
+15000523 8 098-01-01-A
+18600015 8 040-12-01-A`, done: new Set() }
+  };
+  const PIN_HASH = 'a1fb4e703a9ef1fa4936801721ff285a97ac85330856674412e054892afe6972';
+  const editor = document.getElementById('editor');
+  async function sha256(t) {
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t));
+    return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,'0')).join('');
+  }
+  document.getElementById('unlock').addEventListener('click', async () => {
+    const pin = prompt('Enter owner PIN to edit sheets');
+    if (pin === null) return;
+    if (await sha256(pin.trim()) === PIN_HASH) { editor.hidden = false; editor.open = true; }
+    else alert('Wrong PIN');
+  });
+  document.getElementById('lock').addEventListener('click', () => { cur.data = ta.value; render(); editor.hidden = true; });
+  const sel = document.getElementById('sheet');
+  let cur = SHEETS[sel.value];
+  let done = cur.done;
+  ta.value = cur.data;
+
+  const mk = t => { const c = qrcode(0, 'M'); c.addData(t); c.make();
+    return c.createSvgTag({ cellSize: 4, margin: 1, scalable: true }); };
+
+  function parse() {
+    return ta.value.split('\n').map(l => l.trim()).filter(Boolean).map(line => {
+      if (line.startsWith('#')) return { group: line.slice(1).trim() };
+      const p = line.split(/\s+/);
+      const item = p[0];
+      const qty = p[1] && /^\d+$/.test(p[1]) ? p[1] : '';
+      const bins = p.slice(qty ? 2 : 1).join(' ').split('|').map(b => b.trim()).filter(Boolean)
+        .map(b => { const m = b.match(/^(.*?)\s*\((\d+)\)$/); return m ? { bin: m[1], stock: m[2] } : { bin: b, stock: '' }; });
+      return { item, qty, bins };
+    });
+  }
+
+  const chosen = {};
+  function render() {
+    const rows = parse();
+    const items = rows.filter(r => r.item);
+    const f = q.value.trim().toLowerCase();
+    grid.innerHTML = '';
+    let shown = 0, pieces = 0;
+    for (const r of rows) {
+      if (r.group) { if (!f) { const h = document.createElement('div'); h.className = 'group'; h.textContent = r.group; grid.appendChild(h); } continue; }
+      pieces += +r.qty || 0;
+      const binText = r.bins.map(b => b.bin).join(' ').toLowerCase();
+      if (f && !(r.item.toLowerCase().includes(f) || binText.includes(f))) continue;
+      shown++;
+      const key = cur.name + ':' + r.item;
+      let sel = chosen[key] ?? 0; if (sel >= r.bins.length) sel = 0;
+      const card = document.createElement('div');
+      card.className = 'card' + (done.has(r.item) ? ' done' : '');
+      const binHalf = () => {
+        const b = r.bins[sel];
+        if (!b) return `<div class="half nobin"><div class="lbl">No bin on hand</div><div class="val bin">0 in stock</div></div>`;
+        const pick = r.bins.length > 1
+          ? `<select class="binsel">${r.bins.map((x,i) => `<option value="${i}" ${i===sel?'selected':''}>${x.bin}${x.stock?' · '+x.stock:''}</option>`).join('')}</select>`
+          : `<div class="val bin">${b.bin}</div>`;
+        return `<div class="half binhalf">${mk(b.bin)}<div class="lbl">Bin${b.stock?' · '+b.stock+' in stock':''}</div>${pick}</div>`;
+      };
+      card.innerHTML =
+        `<div class="card-head"><div class="item">${r.item}</div>
+           <label><input type="checkbox" ${done.has(r.item) ? 'checked' : ''}> Picked</label></div>
+         <div class="pair">${binHalf()}
+           <div class="half">${mk(r.item)}<div class="lbl">Item</div><div class="val">${r.item}</div></div>
+         </div>
+         <div class="card-foot"><span>Expected quantity</span><b>${r.qty || '—'}</b></div>`;
+      card.querySelector('input').addEventListener('change', e => {
+        e.target.checked ? done.add(r.item) : done.delete(r.item);
+        card.classList.toggle('done', e.target.checked); stats(items, pieces);
+      });
+      const bs = card.querySelector('.binsel');
+      if (bs) bs.addEventListener('change', e => { chosen[key] = +e.target.value; render(); });
+      grid.appendChild(card);
+    }
+    if (!shown) grid.innerHTML = '<div class="empty">No items match.</div>';
+    stats(items, pieces);
+  }
+
+  function stats(rows, pieces) {
+    document.getElementById('stat-items').textContent = rows.length;
+    document.getElementById('stat-pieces').textContent = pieces;
+    document.getElementById('stat-done').textContent = [...done].filter(i => rows.some(r => r.item === i)).length;
+  }
+
+  document.getElementById('regen').addEventListener('click', () => { cur.data = ta.value; render(); });
+  sel.addEventListener('change', () => { cur.data = ta.value; cur = SHEETS[sel.value]; done = cur.done; ta.value = cur.data;
+    document.getElementById('sheet-name').textContent = cur.name; document.title = cur.name + ' — pick sheet'; render(); });
+  document.getElementById('reset').addEventListener('click', () => { done.clear(); render(); });
+  q.addEventListener('input', render);
+  document.getElementById('size').addEventListener('input', e =>
+    document.documentElement.style.setProperty('--card', e.target.value + 'px'));
+  render();
+</script>
+</body>
+</html>
