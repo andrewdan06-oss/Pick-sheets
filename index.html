@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
 <title>Pick sheets</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
@@ -18,7 +19,21 @@
     --tape-ink: #1a0a00;
     --check: #1f8a4c;
     --card: 320px;
+    --head: #f6f7f9;
+    --qrbg: #ffffff;
   }
+  html[data-theme="dark"] {
+    --page: #0f1216;
+    --panel: #171b21;
+    --ink: #eef1f5;
+    --steel: #9aa3ad;
+    --line: #2a3038;
+    --head: #1d2229;
+    --qrbg: #ffffff;
+  }
+  html[data-theme="dark"] .top { background: #05070a; }
+  html[data-theme="dark"] .search, html[data-theme="dark"] select, html[data-theme="dark"] button, html[data-theme="dark"] textarea { background: var(--panel); color: var(--ink); border-color: var(--line); }
+  html[data-theme="dark"] .card-head { background: var(--head); }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--page); color: var(--ink);
     font-family: Barlow, "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.4; }
@@ -49,7 +64,7 @@
 
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; break-inside: avoid; display: flex; flex-direction: column; }
   .card.done { opacity: .45; }
-  .card-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--line); background: #f6f7f9; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--head); }
   .card-head .item { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 26px; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
   .card-head label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--steel); cursor: pointer; user-select: none; }
   .who { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.04em; background: var(--steel); color: #fff; padding: 1px 7px; border-radius: 10px; }
@@ -57,7 +72,7 @@
   .card-head input { accent-color: var(--check); width: 16px; height: 16px; }
   .pair { display: flex; gap: 12px; padding: 14px; }
   .half { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-  .half svg { width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 6px; padding: 4px; background: #fff; }
+  .half svg { width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 6px; padding: 4px; background: var(--qrbg); }
   .lbl { font-size: 11px; color: var(--steel); }
   .half.nobin { justify-content: center; border: 1.5px dashed var(--line); border-radius: 6px; }
   .half.nobin .val.bin { background: #fde8d8; color: #9a3d00; }
@@ -75,7 +90,25 @@
   textarea { width: 100%; min-height: 220px; font: 14px/1.6 ui-monospace, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; border: 1.5px solid var(--line); border-radius: 6px; padding: 10px; }
   .editor-actions { margin-top: 10px; }
 
-  @media (max-width: 600px) { .title { font-size: 32px; } .top, .bar-inner, main { padding-left: 14px; padding-right: 14px; } }
+  @media (max-width: 600px) {
+    .title { font-size: 28px; }
+    .top { padding: 14px 14px 12px; }
+    .top-inner { gap: 10px 18px; }
+    .stats { gap: 18px; }
+    .stat { font-size: 24px; }
+    .bar-inner { padding: 8px 10px; gap: 8px; }
+    .search { flex: 1 1 100%; padding: 10px 12px; }
+    select { flex: 1 1 60%; padding: 10px 12px; font-size: 15px; }
+    button { padding: 10px 12px; font-size: 14px; min-height: 42px; }
+    .seg { display: none; }
+    main { padding: 14px 10px 60px; }
+    .grid { grid-template-columns: 1fr; gap: 12px; }
+    .card-head .item { font-size: 24px; }
+    .card-head input { width: 22px; height: 22px; }
+    .card-head label { font-size: 14px; gap: 8px; padding: 6px 0; }
+    .pair { gap: 10px; padding: 12px; }
+    .binsel { font-size: 18px; padding: 8px; }
+  }
   @media (prefers-reduced-motion: no-preference) { .card { transition: opacity .2s; } }
   @media print {
     body { background: #fff; }
@@ -115,6 +148,7 @@
     <button id="reset">Clear picked</button>
     <button id="closeorder" title="Remove this order from the list">Close order</button>
     <button id="unlock" title="Owner only">Unlock editing</button>
+    <button id="theme" title="Light / dark">🌙</button>
   </div>
 </div>
 
@@ -127,10 +161,17 @@
   </details>
 
   <div id="grid" class="grid" aria-live="polite"></div>
-  <div id="noorders" class="empty" hidden>No open orders. Tap <b>+ New order</b> to start one.</div>
 </main>
 
 <script>
+  // --- theme (remembered on this device; follows system by default) ---
+  const root = document.documentElement;
+  function applyTheme(t) { root.setAttribute('data-theme', t); document.getElementById('theme').textContent = t === 'dark' ? '☀️' : '🌙'; }
+  let theme = null; try { theme = localStorage.getItem('theme'); } catch (e) {}
+  if (!theme) theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  applyTheme(theme);
+  document.getElementById('theme').addEventListener('click', () => { theme = theme === 'dark' ? 'light' : 'dark'; try { localStorage.setItem('theme', theme); } catch (e) {} applyTheme(theme); });
+
   const grid = document.getElementById('grid');
   const ta = document.getElementById('items');
   const q = document.getElementById('q');
@@ -194,7 +235,6 @@
   });
   document.getElementById('lock').addEventListener('click', () => { editor.hidden = true; });
   const sel = document.getElementById('sheet');
-  const noOrders = document.getElementById('noorders');
 
   // --- who am I (asked once, remembered on this phone) ---
   function getMe() {
@@ -224,16 +264,16 @@
   }
   async function saveOrders() { await sset('orders', orders); }
 
-  function orderLabel(o) { return TEMPLATES[o.tpl].name + ' — #' + o.num; }
+  function orderLabel(o) { return o.num ? TEMPLATES[o.tpl].name + ' — #' + o.num : TEMPLATES[o.tpl].name; }
+  const BASE = Object.keys(TEMPLATES).map(k => ({ id: 'tpl-' + k, tpl: k, num: '', data: TEMPLATES[k].data, base: true }));
+  const allOrders = () => [...BASE, ...orders];
 
   function fillSelect() {
     const keep = cur ? cur.id : null;
-    sel.innerHTML = orders.map(o => `<option value="${o.id}">${orderLabel(o)}</option>`).join('');
-    if (keep && orders.some(o => o.id === keep)) sel.value = keep;
-    const has = orders.length > 0;
-    noOrders.hidden = has; grid.hidden = !has;
-    document.getElementById('reset').disabled = !has;
-    document.getElementById('closeorder').disabled = !has;
+    const list = allOrders();
+    sel.innerHTML = list.map(o => `<option value="${o.id}">${orderLabel(o)}</option>`).join('');
+    if (keep && list.some(o => o.id === keep)) sel.value = keep;
+    document.getElementById('closeorder').disabled = !(cur && !cur.base);
   }
 
   async function loadDone() {
@@ -244,12 +284,12 @@
   async function saveDone() { if (cur) await sset('picked:' + cur.id, [...done]); }
 
   async function openOrder(id) {
-    cur = orders.find(o => o.id === id) || null;
+    cur = allOrders().find(o => o.id === id) || null;
     if (!cur) { fillSelect(); render(); return; }
     ta.value = cur.data;
     document.getElementById('sheet-name').textContent = orderLabel(cur);
     document.title = orderLabel(cur) + ' — pick sheet';
-    await loadDone(); render();
+    fillSelect(); await loadDone(); render();
   }
 
   // --- create a new order: pick a template, type the order number ---
@@ -269,17 +309,17 @@
   });
 
   document.getElementById('closeorder').addEventListener('click', async () => {
-    if (!cur) return;
+    if (!cur || cur.base) return;
     if (!confirm('Close ' + orderLabel(cur) + '? It disappears from everyone\'s list.')) return;
     await loadOrders(); orders = orders.filter(o => o.id !== cur.id); await saveOrders();
-    fillSelect(); await openOrder(orders[0] ? orders[0].id : null);
+    fillSelect(); await openOrder(BASE[0].id);
   });
 
   // poll so new orders and teammates' picks show up on my screen
   if (hasStore) setInterval(async () => {
     const beforeO = JSON.stringify(orders.map(o => o.id));
     await loadOrders();
-    if (JSON.stringify(orders.map(o => o.id)) !== beforeO) { fillSelect(); if (!cur || !orders.some(o => o.id === cur.id)) { await openOrder(orders[0] ? orders[0].id : null); return; } }
+    if (JSON.stringify(orders.map(o => o.id)) !== beforeO) { fillSelect(); if (!cur || !allOrders().some(o => o.id === cur.id)) { await openOrder(BASE[0].id); return; } }
     const before = JSON.stringify([...done]);
     await loadDone();
     if (JSON.stringify([...done]) !== before) render();
@@ -353,7 +393,7 @@
     document.getElementById('stat-done').textContent = [...done.keys()].filter(i => rows.some(r => r.item === i)).length;
   }
 
-  document.getElementById('regen').addEventListener('click', async () => { if (!cur) return; cur.data = ta.value; await loadOrders(); const o = orders.find(x => x.id === cur.id); if (o) { o.data = cur.data; await saveOrders(); } render(); });
+  document.getElementById('regen').addEventListener('click', async () => { if (!cur) return; cur.data = ta.value; await loadOrders(); if (!cur.base) { const o = orders.find(x => x.id === cur.id); if (o) { o.data = cur.data; await saveOrders(); } } render(); });
   sel.addEventListener('change', () => openOrder(sel.value));
   document.getElementById('reset').addEventListener('click', () => {
     if (!cur) return;
@@ -363,7 +403,7 @@
   q.addEventListener('input', render);
   document.getElementById('size').addEventListener('input', e =>
     document.documentElement.style.setProperty('--card', e.target.value + 'px'));
-  (async () => { await loadOrders(); fillSelect(); await openOrder(orders[0] ? orders[0].id : null); })();
+  (async () => { await loadOrders(); fillSelect(); await openOrder(BASE[0].id); })();
 </script>
 </body>
 </html>
