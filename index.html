@@ -161,7 +161,7 @@
   </details>
 
   <div id="grid" class="grid" aria-live="polite"></div>
-</main>
+  </main>
 
 <script>
   // --- theme (remembered on this device; follows system by default) ---
@@ -236,17 +236,18 @@
   document.getElementById('lock').addEventListener('click', () => { editor.hidden = true; });
   const sel = document.getElementById('sheet');
 
-  // --- who am I (asked once, remembered on this phone) ---
-  function getMe() {
-    let me = '';
-    try { me = localStorage.getItem('picker-initials') || ''; } catch (e) {}
-    while (!me) {
-      me = (prompt('Enter your initials (so teammates see who picked what):') || '').trim().toUpperCase().slice(0, 4);
-      if (me) { try { localStorage.setItem('picker-initials', me); } catch (e) {} }
+  // --- who am I (only asked when creating a new order; remembered on this phone) ---
+  let ME = '';
+  try { ME = localStorage.getItem('picker-initials') || ''; } catch (e) {}
+  function askMe() {
+    while (!ME) {
+      const v = prompt('Enter your initials (so teammates see who picked what):');
+      if (v === null) return false;
+      ME = v.trim().toUpperCase().slice(0, 4);
     }
-    return me;
+    try { localStorage.setItem('picker-initials', ME); } catch (e) {}
+    return true;
   }
-  let ME = getMe();
 
   // --- shared storage helpers ---
   const hasStore = typeof window !== 'undefined' && window.storage && window.storage.get;
@@ -294,6 +295,7 @@
 
   // --- create a new order: pick a template, type the order number ---
   document.getElementById('neworder').addEventListener('click', async () => {
+    if (!askMe()) return;
     const keys = Object.keys(TEMPLATES);
     const menu = keys.map((k, i) => `${i + 1} = ${TEMPLATES[k].name}`).join('\n');
     const pick = prompt('Which pick list?\n' + menu + '\n\nType a number:');
@@ -376,7 +378,7 @@
          </div>
          <div class="card-foot"><span>Expected quantity</span><b>${r.qty || '—'}</b></div>`;
       card.querySelector('input').addEventListener('change', e => {
-        if (e.target.checked) done.set(r.item, ME); else done.delete(r.item);
+        if (e.target.checked) done.set(r.item, ME || '✓'); else done.delete(r.item);
         saveDone(); render();
       });
       const bs = card.querySelector('.binsel');
